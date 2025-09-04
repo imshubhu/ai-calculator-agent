@@ -10,6 +10,9 @@ A powerful AI-powered calculator agent built with Node.js that can perform mathe
 - 🖥️ **CLI Interface**: Interactive command-line interface
 - ✅ **Error Handling**: Robust validation and error reporting
 - 🎨 **Beautiful Output**: Color-coded results and formatted display
+ - 🔁 **Unit Conversion**: Length, weight, temperature, area, volume, time
+ - 📈 **Graphing & Visualization**: Function plots, scatter plots, histograms (HTML output)
+ - 🧠 **Memory**: History of previous calculations and `ans` token
 
 ## Supported Operations
 
@@ -29,6 +32,20 @@ A powerful AI-powered calculator agent built with Node.js that can perform mathe
 - Mean, median, mode
 - Standard deviation, variance
 - Sum, count operations
+
+### Unit Conversion
+- Convert between units of length, weight/mass, temperature, area, volume, and time
+- Examples: `convert 100 cm to m`, `convert 32 fahrenheit to celsius`, `convert 1 hour to seconds`
+
+### Graphing & Visualization
+- Plot mathematical functions over a range (HTML files)
+- Create scatter plots from points and histograms from data
+- Examples: `plot x^2 from -5 to 5`, `scatter 1,2 3,4 5,6`, `histogram 1,2,3,4,5,6`
+
+### Memory
+- Keeps a history (last 50 entries by default)
+- Use `ans` to reference the last numeric result in new expressions
+- View, recall, and clear history from the CLI
 
 ### Natural Language Processing
 - "What is 5 plus 3?"
@@ -72,6 +89,22 @@ node index.js info
 
 # Show examples
 node index.js examples
+
+# Unit conversion
+node index.js convert 100 cm m
+node index.js conv 2.5 kg lb
+
+# Graphing & visualization (outputs HTML to ./plots)
+node index.js plot "x^2" --from -5 --to 5
+node index.js scatter 1,2 3,4 5,6
+node index.js histogram "1,2,3,4,5,6,7,8,9,10"
+
+# Memory
+node index.js history           # show last 10
+node index.js history -n 5      # show last 5
+node index.js recall            # recall last
+node index.js recall 2          # recall 2nd most recent
+node index.js clear-history     # clear memory
 ```
 
 ### Programmatic Usage
@@ -91,6 +124,19 @@ console.log(agent.formatResult(result2));
 // Statistics
 const result3 = await agent.calculate('mean([1, 2, 3, 4, 5])');
 console.log(agent.formatResult(result3));
+
+// Unit conversion
+const result4 = await agent.calculate('convert 100 cm to m');
+console.log(agent.formatResult(result4));
+
+// Graphing (generates HTML in ./plots)
+const result5 = await agent.calculate('plot x^2 from -5 to 5');
+console.log(agent.formatResult(result5));
+
+// Memory: using last answer
+await agent.calculate('2 + 3');
+const result6 = await agent.calculate('ans * 4');
+console.log(agent.formatResult(result6));
 ```
 
 ## Examples
@@ -129,6 +175,53 @@ calc> What is 2 to the power of 8?
 ✅ Result: 256
    Expression: 2^8
    Operation: exponentiation
+```
+
+### Unit Conversion
+```
+calc> convert 100 cm to m
+✅ Result: 1 m
+   Expression: 100 cm to m
+   Operation: unit conversion
+
+calc> convert 32 fahrenheit to celsius
+✅ Result: 0 celsius
+   Expression: 32 fahrenheit to celsius
+   Operation: unit conversion
+```
+
+### Graphing & Visualization (HTML output)
+```
+calc> plot x^2 from -5 to 5
+📊 Plot generated successfully!
+   File: D:\\path\\to\\repo\\plots\\function_XXXXXXXXXXXX.html
+   Type: function
+   Open in browser to view the plot
+
+calc> scatter 1,2 3,4 5,6
+📊 Plot generated successfully!
+   File: ...\\plots\\scatter_XXXXXXXXXXXX.html
+   Type: scatter
+   Open in browser to view the plot
+```
+
+### Memory
+```
+calc> 2 + 3
+✅ Result: 5
+
+calc> ans * 4
+✅ Result: 20
+
+calc> history -n 2
+#2 arithmetic → 20
+   Input: ans * 4
+   Expr: 5 * 4
+   At:   2025-01-01T00:00:00.000Z
+#1 arithmetic → 5
+   Input: 2 + 3
+   Expr: 2 + 3
+   At:   2025-01-01T00:00:00.000Z
 ```
 
 ## Testing
@@ -188,12 +281,9 @@ ISC License - see package.json for details
 
 - [ ] Web interface
 - [ ] More advanced NLP capabilities
-- [ ] Unit conversion
-- [ ] Graphing capabilities
-- [ ] Memory for previous calculations
 - [ ] Export results to files
 - [ ] Plugin system for custom functions
 
 ---
 
-Built with ❤️ using Node.js and AI technologies
+Built with ❤️

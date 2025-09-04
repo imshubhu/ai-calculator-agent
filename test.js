@@ -35,6 +35,14 @@ class CalculatorTester {
             // Complex expressions
             { input: '(2 + 3) * 4', expected: 20, description: 'Parentheses' },
             { input: '2 + 3 * 4', expected: 14, description: 'Order of operations' },
+            
+            // Unit conversions
+            { input: 'Convert 100 cm to meters', expected: 1, description: 'Length conversion' },
+            { input: 'Convert 32 fahrenheit to celsius', expected: 0, description: 'Temperature conversion' },
+            
+            // Graphing (these will test parsing, not actual plotting)
+            { input: 'plot x^2', expected: 'graphing', description: 'Function plot parsing' },
+            { input: 'scatter plot 1 2 3 4', expected: 'graphing', description: 'Scatter plot parsing' },
         ];
 
         for (const test of tests) {
@@ -55,6 +63,24 @@ class CalculatorTester {
                 const expected = typeof test.expected === 'number' 
                     ? parseFloat(test.expected.toFixed(6))
                     : test.expected;
+                
+                // Special handling for graphing operations
+                if (test.expected === 'graphing') {
+                    const passed = result.operationType === 'graphing';
+                    this.testResults.push({
+                        ...test,
+                        actual: result.operationType,
+                        passed,
+                        error: null
+                    });
+                    
+                    const status = passed ? chalk.green('✅ PASS') : chalk.red('❌ FAIL');
+                    console.log(`${status} ${test.description}`);
+                    if (!passed) {
+                        console.log(chalk.gray(`   Expected: ${expected}, Got: ${result.operationType}`));
+                    }
+                    return;
+                }
                 
                 const passed = Math.abs(actual - expected) < 0.0001;
                 
