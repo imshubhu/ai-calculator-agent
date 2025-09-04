@@ -4,6 +4,9 @@ const { Command } = require('commander');
 const chalk = require('chalk');
 const readline = require('readline');
 const CalculatorAgent = require('./CalculatorAgent');
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
 
 class CalculatorCLI {
     constructor() {
@@ -97,6 +100,13 @@ class CalculatorCLI {
         // Default to interactive mode if no command provided
         this.program
             .action(() => this.startInteractiveMode());
+
+        // Web server
+        this.program
+            .command('web')
+            .description('Start web server interface')
+            .option('-p, --port <port>', 'Port to run the server on', '3000')
+            .action((options) => this.startWebServer(parseInt(options.port, 10) || 3000));
     }
 
     async startInteractiveMode() {
@@ -441,6 +451,50 @@ class CalculatorCLI {
 
     run() {
         this.program.parse();
+    }
+
+    startWebServer(port) {
+        const app = express();
+        app.use(cors());
+        app.use(express.json());
+
+        // Serve static frontend and plots directory
+        const publicDir = path.join(process.cwd(), 'public');
+        app.use('/plots', express.static(path.join(process.cwd(), 'plots')));
+        app.use(express.static(publicDir));
+
+        // REST endpoints
+        app.post('/api/calculate', async (req, res) => {
+            try {
+                const { input } = req.body || {};
+                if (!input || typeof input !== 'string') {
+                    return res.status(400).json({ success: false, error: 'Missing input' });
+                }
+                const result = await this.agent.calculate(input);
+                return res.json(result);
+            } catch (e) {
+                return res.status(500).json({ success: false, error: e.message });
+            }
+        });
+
+        app.get('/api/history', (req, res) => {
+            const n = parseInt(req.query.n, 10) || 10;
+            return res.json({ success: true, history: this.agent.getHistory(n) });
+        });
+
+        app.post('/api/clear-history', (req, res) => {
+            this.agent.clearHistory();
+            return res.json({ success: true });
+        });
+
+        app.get('/api/info', (req, res) => {
+            return res.json(this.agent.getInfo());
+        });
+
+        app.listen(port, () => {
+            console.log(chalk.cyan(`\n🌐 Web server running at http://localhost:${port}`));
+            console.log(chalk.gray(`Serving static files from ${publicDir} and plots from /plots`));
+        });
     }
 }
 

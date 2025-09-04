@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Calculator Agent - Web</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; }
+        header { padding: 16px 20px; background: #111827; border-bottom: 1px solid #1f2937; }
+        header h1 { margin: 0; font-size: 18px; }
+        main { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+        .card { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+        .row { display: flex; gap: 8px; }
+        input[type="text"] { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid #374151; background: #0b1220; color: #e2e8f0; }
+        button { padding: 10px 14px; border-radius: 8px; border: 1px solid #374151; background: #1d4ed8; color: white; cursor: pointer; }
+        button.secondary { background: #334155; }
+        .result { white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+        .muted { color: #9ca3af; }
+        a { color: #93c5fd; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; border-bottom: 1px solid #1f2937; text-align: left; }
+        th { color: #9ca3af; font-weight: 600; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 9999px; background: #0b1220; border: 1px solid #1f2937; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🤖 AI Calculator Agent</h1>
+    </header>
+    <main>
+        <section class="card">
+            <h2>Ask or Calculate</h2>
+            <div class="row">
+                <input id="input" type="text" placeholder="e.g., 2 + 3 * 4, convert 100 cm to m, plot x^2 from -5 to 5" />
+                <button id="btn-run">Run</button>
+            </div>
+            <p class="muted">Tip: Use <span class="pill">ans</span> to reference the last numeric result.</p>
+            <div id="output" class="result"></div>
+        </section>
+
+        <section class="card">
+            <div class="row" style="justify-content: space-between; align-items: center;">
+                <h2 style="margin:0;">History</h2>
+                <div>
+                    <button id="btn-refresh" class="secondary">Refresh</button>
+                    <button id="btn-clear" class="secondary">Clear</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Operation</th>
+                        <th>Input</th>
+                        <th>Result</th>
+                        <th>When</th>
+                    </tr>
+                </thead>
+                <tbody id="history"></tbody>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>Plots</h2>
+            <p class="muted">Function plots, scatter plots, and histograms are saved as HTML files in <code>/plots</code>. Open them directly from the links shown in results.</p>
+        </section>
+    </main>
+
+    <script>
+        const output = document.getElementById('output');
+        const historyBody = document.getElementById('history');
+
+        async function run() {
+            const input = document.getElementById('input').value.trim();
+            if (!input) return;
+            output.textContent = 'Running...';
+            try {
+                const res = await fetch('/api/calculate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input }) });
+                const data = await res.json();
+                if (!data.success) {
+                    output.textContent = 'Error: ' + data.error;
+                    return;
+                }
+                if (data.operationType === 'graphing' && data.result && data.result.filepath) {
+                    const file = data.result.filepath.replace(/\\/g, '/');
+                    const rel = file.split('/plots/')[1] || '';
+                    output.innerHTML = `Plot created: <a href="/plots/${rel}" target="_blank">open</a>`;
+                } else if (data.operationType === 'unit conversion') {
+                    output.textContent = `Result: ${data.result} ${data.toUnit || ''}`.trim();
+                } else {
+                    output.textContent = 'Result: ' + data.result;
+                }
+                await loadHistory();
+            } catch (e) {
+                output.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        async function loadHistory() {
+            const res = await fetch('/api/history?n=20');
+            const data = await res.json();
+            historyBody.innerHTML = '';
+            (data.history || []).forEach((e, i) => {
+                const tr = document.createElement('tr');
+                const idx = i + 1;
+                const rendered = typeof e.result === 'number' ? e.result : (e.result && e.result.filepath ? `<a href="/plots/${(e.result.filepath||'').split('plots\\\\').pop().split('plots/').pop()}" target="_blank">plot</a>` : String(e.result));
+                tr.innerHTML = `<td>${idx}</td><td>${e.operationType}</td><td>${e.input}</td><td>${rendered}</td><td>${new Date(e.timestamp).toLocaleString()}</td>`;
+                historyBody.appendChild(tr);
+            });
+        }
+
+        async function clearHistory() {
+            await fetch('/api/clear-history', { method: 'POST' });
+            await loadHistory();
+        }
+
+        document.getElementById('btn-run').addEventListener('click', run);
+        document.getElementById('btn-refresh').addEventListener('click', loadHistory);
+        document.getElementById('btn-clear').addEventListener('click', clearHistory);
+        document.getElementById('input').addEventListener('keydown', (e) => { if (e.key === 'Enter') run(); });
+
+        loadHistory();
+    </script>
+</body>
+</html>
+
+

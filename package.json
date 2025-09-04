@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "test": "node test.js"
+    "test": "node test.js",
+    "web": "node index.js web --port 3000"
   },
   "keywords": ["ai", "calculator", "math", "agent", "nlp"],
   "author": "",
@@ -15,6 +16,8 @@
     "mathjs": "^12.0.0",
     "natural": "^6.7.0",
     "commander": "^11.1.0",
-    "chalk": "^4.1.2"
+    "chalk": "^4.1.2",
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
   }
 }

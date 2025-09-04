@@ -105,6 +105,11 @@ node index.js history -n 5      # show last 5
 node index.js recall            # recall last
 node index.js recall 2          # recall 2nd most recent
 node index.js clear-history     # clear memory
+# Web interface
+npm run web
+# or
+node index.js web --port 3000
+# Then open http://localhost:3000
 ```
 
 ### Programmatic Usage
@@ -279,7 +284,6 @@ ISC License - see package.json for details
 
 ## Future Enhancements
 
-- [ ] Web interface
 - [ ] More advanced NLP capabilities
 - [ ] Export results to files
 - [ ] Plugin system for custom functions
